@@ -93,6 +93,8 @@ jobs:
         do
           gh release delete $r -y
         done
+        git clone https://github.com/okibcn/myopenwrt  clonedrepo
+        cd clonedrepo
         release_list=$(gh release list|awk '{print $1}')
         echo -e "REMAINING RELESES:\n$release_list"
         tag_list=$(git tag -l)
