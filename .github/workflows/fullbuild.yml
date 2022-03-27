@@ -97,7 +97,7 @@ jobs:
         echo -e "REMAINING RELESES:\n$release_list"
         tag_list=$(git tag -l)
         deltag_list=$(echo "$tag_list" | grep -v "$release_list")
-        echo -e "DELETING TAGS:\n$deltag_list"
+        echo -e "DELETING TAGS:\n$deltag_list"  
         git tag -d $(echo "$tag_list" | grep -v "$release_list")
         git fetch
         git push origin --delete $(echo "$tag_list" | grep -v "$release_list")
