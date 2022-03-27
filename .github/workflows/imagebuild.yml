@@ -1,0 +1,125 @@
+# Copyright (c) 2021 mientz
+# This is free software, licensed under the GNU General Public License v3.0
+# See /LICENSE for more information.
+# https://github.com/mientz/imagebuilder-actions
+# Description: Build OpenWrt using GitHub Actions
+
+name: OPENWRT_IMAGE_BUILD
+
+on: workflow_dispatch
+
+env:
+  # Define your image build parameters
+  # RELEASE can be "snapshots" or a release version i.e. "21.02.1"
+  # from openwrt-21.02.1-ramips-mt76x8-netgear_r6020-squashfs-factory
+  # PROFILE: netgear_r6020
+  # RELEASE: snapshots
+  # TARGET: ramips
+  # ARCH: mt76x8
+  # DIFF_PACKAGES: "nano-plus htop iperf3 luci wpad-mesh-wolfssl -wpad-basic-wolfssl luci-app-vnstat2 luci-app-nlbwmon"
+  
+  PROFILE: netgear_r7800
+  RELEASE: "snapshots"
+  TARGET: ipq806x
+  ARCH: generic
+  DIFF_PACKAGES: "nano-plus htop ncdu iperf3 irqbalance auc -kmod-ath10k-ct -ath10k-firmware-qca9984-ct kmod-ath10k ath10k-firmware-qca9984 -wpad-basic-wolfssl wpad-wolfssl openvpn-wolfssl luci-ssl luci luci-compat luci-mod-dashboard luci-app-attendedsysupgrade luci-theme-argon luci-app-argon-config luci-lib-ipkg luci-app-ttyd luci-app-statistics collectd-mod-conntrack collectd-mod-cpu collectd-mod-cpufreq collectd-mod-dhcpleases collectd-mod-entropy collectd-mod-exec collectd-mod-interface collectd-mod-iwinfo collectd-mod-load collectd-mod-memory collectd-mod-network collectd-mod-ping collectd-mod-rrdtool collectd-mod-sqm collectd-mod-thermal collectd-mod-uptime collectd-mod-wireless"
+
+  # PROFILE: linksys_e8450-ubi
+  # RELEASE: snapshots
+  # TARGET: mediatek
+  # ARCH: mt7622
+  # DIFF_PACKAGES: "nano-plus htop ncdu iperf3 irqbalance auc ca-certificates -wpad-basic-wolfssl -libustream-wolfssl -px5g-wolfssl wpad-openssl libustream-openssl luci-ssl-openssl luci luci-compat luci-mod-dashboard luci-app-attendedsysupgrade luci-app-vnstat2 luci-app-nlbwmon luci-app-adblock luci-app-banip luci-app-bcp38 luci-app-commands luci-app-ddns ddns-scripts-noip luci-app-openvpn -luci-ssl-openssl luci-app-sqm luci-app-wireguard luci-app-upnp luci-app-uhttpd luci-app-statistics collectd-mod-conntrack collectd-mod-cpu collectd-mod-cpufreq collectd-mod-dhcpleases collectd-mod-entropy collectd-mod-exec collectd-mod-interface collectd-mod-iwinfo collectd-mod-load collectd-mod-memory collectd-mod-network collectd-mod-ping collectd-mod-rrdtool collectd-mod-sqm collectd-mod-thermal collectd-mod-uptime collectd-mod-wireless blockd cryptsetup e2fsprogs f2fs-tools kmod-fs-exfat kmod-fs-ext4 kmod-fs-f2fs kmod-fs-hfs kmod-fs-hfsplus kmod-fs-msdos kmod-fs-nfs kmod-fs-nfs-common kmod-fs-nfs-v3 kmod-fs-nfs-v4 kmod-fs-vfat kmod-nls-base kmod-nls-cp1250 kmod-nls-cp437 kmod-nls-cp850 kmod-nls-iso8859-1 kmod-nls-iso8859-15 kmod-nls-utf8 kmod-usb-storage kmod-usb-storage-uas libblkid ntfs-3g nfs-utils ip6tables-mod-nat 6in4 6rd 6to4 ip6tables-nft"
+
+
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.17.0'
+    - run: go version
+
+    # - name: Install libfdt-dev and cmake
+    #   run: sudo apt install libfdt-dev cmake
+    
+    - name: DOWNLOAD AND DEPLOY IMAGE BUILDER
+      run: |
+        if [ "$RELEASE" = "snapshots" ]; then 
+          wget https://downloads.openwrt.org/$RELEASE/targets/$TARGET/$ARCH/openwrt-imagebuilder-$TARGET-$ARCH.Linux-x86_64.tar.xz -O - | tar xJf - --strip-components=1;
+        else
+          wget https://downloads.openwrt.org/releases/$RELEASE/targets/$TARGET/$ARCH/openwrt-imagebuilder-$RELEASE-$TARGET-$ARCH.Linux-x86_64.tar.xz -O - | tar xJf - --strip-components=1;
+        fi	
+        ls -la
+
+    - name: ADD LOCAL PACKAGES AND FILES
+      run: |
+        if !(grep "src imagebuilder file:packages" repositories.conf) then
+          echo "src imagebuilder file:packages" >> repositories.conf
+          echo "fixed repositories.conf"
+        fi
+
+        mkdir -p packages
+        URL=$(wget -q https://api.github.com/repos/jerrykuku/luci-theme-argon/releases/latest -O - | awk -F \" -v RS="," '/browser_download_url/ && /argon_/ {print $(NF-1)}')
+        wget $URL -O packages/$(basename "$URL")
+        URL=$(wget -q https://api.github.com/repos/jerrykuku/luci-theme-argon/releases/latest -O - | awk -F \" -v RS="," '/browser_download_url/ && /config_/ {print $(NF-1)}')
+        wget $URL -O packages/$(basename "$URL")
+
+        mkdir -p files
+                
+   
+    - name: BUILD IMAGE WITH EXTRA GITHUB REPO FILES
+      id: imageExtra
+      run: |
+        make -j$(nproc) image \
+          PROFILE=$PROFILE \
+          PACKAGES="$DIFF_PACKAGES" \
+          FILES=files/ \
+          EXTRA_IMAGE_NAME="$(date +"%Y.%m.%d-%H%M")"
+        echo "::set-output name=status::success"
+
+    # - name: UPLOAD ARTIFACTS
+    #   uses: actions/upload-artifact@v2
+    #   with:
+    #     name: OpenWrt_images
+    #     path: bin/targets/${{ env.TARGET }}/${{ env.ARCH }}/
+
+    - name: GENERATE RELEASE TAG
+      id: tag
+      run: |
+        echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M")"
+        echo "::set-output name=status::success"
+    
+    - name: UPLOAD RELEASE
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: Image-${{ env.PROFILE }}-${{ env.RELEASE }}-${{ steps.tag.outputs.release_tag }}
+        files: bin/targets/${{ env.TARGET }}/${{ env.ARCH }}/*
+        body: |
+          Build Profile: `${{ env.PROFILE }}`
+          Release: `${{ env.RELEASE }}`
+          Target: `${{ env.TARGET }}`
+          Arch: `${{ env.ARCH }}`
+          Custom Packages: `${{ env.DIFF_PACKAGES }}`
+
+    - name: Delete workflow runs
+      uses: GitRML/delete-workflow-runs@main
+      with:
+        retain_days: 1
+        keep_minimum_runs: 3
+
+    - name: Remove old Releases
+      uses: dev-drprasad/delete-older-releases@v0.1.0
+      with:
+        keep_latest: 6
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

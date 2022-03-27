@@ -1,0 +1,104 @@
+# Copyright (c) 2022 okibcn
+# This is free software, licensed under the GNU General Public License v3.0
+# See /LICENSE for more information.
+# https://github.com/okibcn/myopenwrt
+# Description: Build OpenWrt image with full config
+
+name: OPENWRT_FULL_BUILD
+
+on: 
+  schedule:
+    - cron: '* 1,13 * * *'
+  workflow_dispatch:
+
+env:
+  MYSCRIPT: full.sh
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        device: [ E8450, R7800, R6020 ]
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: DOWNLOAD OPENWRT KITCHEN and CONFIG FOR ${{ matrix.device }}
+      run: ./$MYSCRIPT set_${{ matrix.device }}
+        
+    - name: BUILD IMAGE
+      run: |
+        cd ${{ matrix.device }}
+        ../$MYSCRIPT fakeall
+#        ../$MYSCRIPT makeall
+        
+    - name: PREPARE UPLOAD FOLDER
+      id: prepare
+      run: |
+        cd ${{ matrix.device }}
+        cp diff.config bin/targets/*/*
+        cd bin/targets/*/*
+        rm -rf packages
+        ls -als
+        echo "OUTTAG=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_ENV
+        echo "OUTDIR=$PWD" >> $GITHUB_ENV
+        echo "BUILD=$( awk -F - '{print $1}' <<< $RELEASE )" >> $GITHUB_ENV
+        echo "::set-output name=status::success"
+        
+    # - name: UPLOAD ARTIFACT
+    #   uses: actions/upload-artifact@main
+    #   with:
+    #     name: OpenWrt_firmware-${{ env.OUTTAG }}
+    #     path: ${{ env.OUTDIR }}
+
+    - name: Delete workflow runs
+      uses: GitRML/delete-workflow-runs@main
+      with:
+        retain_days: 1
+        keep_minimum_runs: 6
+
+    # - name: Remove old Releases and tags
+    #   uses: dev-drprasad/delete-older-releases@v0.2.0
+    #   with:
+    #     keep_latest: 3
+    #     delete_tags: true
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: UPLOAD RELEASE FOR ${{ matrix.device }}
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ matrix.device }}-OpenWrt_${{ env.BUILD }}-${{ env.OUTTAG }}
+        files: ${{ env.OUTDIR }}/*
+        body: |
+          Device profile: `${{ env.PROFILE }}`
+          OpenWrt build: `${{ env.RELEASE }}`
+          Timestamp: `${{ env.OUTTAG }}`
+          Target architecture: `${{ env.TARGET }}`
+          Subtarget: `${{ env.ARCH }}`
+          Custom config: `${{ env.DIFF_CONFIG }}`
+          Custom Packages: `${{ env.DIFF_PACKAGES }}`
+
+
+    - name: REMOVE UNUSED TAGS
+      env:
+        keep_latest: 6
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        delrelease_list=$(gh release list|awk '{print $1}'|sed -e '1,'$keep_latest'd')
+        echo -e "DELETING RELESES:\n$delrelease_list"
+        for r in $(gh release list|awk '{print $1}'|sed -e '1,'$keep_latest'd')
+        do
+          gh release delete $r -y
+        done
+        release_list=$(gh release list|awk '{print $1}')
+        echo -e "REMAINING RELESES:\n$release_list"
+        tag_list=$(git tag -l)
+        deltag_list=$(echo "$tag_list" | grep -v "$release_list")
+        echo -e "DELETING TAGS:\n$deltag_list"
+        for t in $(echo "$tag_list" | grep -v "$release_list")
+        do
+            git tag -d $t
+        done

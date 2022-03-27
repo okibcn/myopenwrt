@@ -1,0 +1,13 @@
+diff --git a/package/network/utils/iproute2/Makefile b/package/network/utils/iproute2/Makefile
+index 55c00a0d6d..465f107575 100644
+--- a/package/network/utils/iproute2/Makefile
++++ b/package/network/utils/iproute2/Makefile
+@@ -75,7 +75,7 @@ $(call Package/iproute2/Default)
+   VARIANT:=tcfull
+   PROVIDES:=tc
+   ALTERNATIVES:=400:/sbin/tc:/usr/libexec/tc-full
+-  DEPENDS:=+kmod-sched-core +(PACKAGE_devlink||PACKAGE_rdma):libmnl +libbpf +libxtables +tc-mod-iptables
++  DEPENDS:=+kmod-sched-core +libbpf +libxtables +tc-mod-iptables +(PACKAGE_devlink||PACKAGE_rdma):libmnl
+ endef
+ 
+ define Package/tc-mod-iptables

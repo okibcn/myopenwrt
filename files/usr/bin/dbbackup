@@ -1,0 +1,83 @@
+#!/bin/sh
+
+backup() {
+    mkdir -p /data
+    chmod 777 /data
+
+    ## BACKUP RRD (collectd) ##
+    if [ -d /var/rrd/ ]; then
+        cd /var
+        tar -czvf /data/rrd_dbbackup.tar.gz rrd/*
+        mv /data/rrd_dbbackup.tar.gz /data/rrd_dbbackup.tgz
+    fi
+
+    ## BACKUP VNSTAT ##
+    if [ -d /var/lib/vnstat/ ]; then
+        cd /var/lib
+        tar -czvf /data/vnstat_dbbackup.tar.gz vnstat/*
+        mv /data/vnstat_dbbackup.tar.gz /data/vnstat_dbbackup.tgz
+    fi
+
+    ## BACKUP NLBWMON ##
+    if [ -d /var/lib/nlbwmon/ ]; then
+        cd /var/lib
+        tar -czvf /data/nlbwmon_dbbackup.tar.gz nlbwmon/*
+        mv /data/nlbwmon_dbbackup.tar.gz /data/nlbwmon_dbbackup.tgz
+    fi
+}
+
+restore() {
+    ## RESTORE RRD (collectd) ##
+    if [ -e /data/rrd_dbbackup.tgz ]; then
+        /etc/init.d/collectd stop
+        cd /var
+        tar xzvf /data/rrd_dbbackup.tgz
+        /etc/init.d/collectd enable
+        /etc/init.d/collectd start
+    fi
+
+    ## RESTORE VNSTAT ##
+    if [ -e /data/vnstat_dbbackup.tgz ]; then
+        /etc/init.d/vnstat stop
+        cd /var/lib
+        tar xzvf /data/vnstat_dbbackup.tgz
+        /etc/init.d/vnstat enable
+        /etc/init.d/vnstat start
+    fi
+
+    ## RESTORE NLBWMON ##
+    if [ -e /data/nlbwmon_dbbackup.tgz ]; then
+        /etc/init.d/nlbwmon stop
+        cd /var/lib
+        tar xzvf /data/nlbwmon_dbbackup.tgz
+        /etc/init.d/nlbwmon enable
+        /etc/init.d/nlbwmon start
+    fi
+}
+
+SCRIPT="$(
+    cd -- "$(dirname "$0")" >/dev/null 2>&1
+    pwd -P
+)/$(basename "$0")"
+
+[ -e /data/rrd_dbbackup.tgz ] || [ -e /data/vnstat_dbbackup.tgz ] || [ -e /data/nlbwmon_dbbackup.tgz ] && ! [ -e /tmp/lib/dbbackup ] && restore || backup
+touch /tmp/lib/dbbackup
+
+## SELF INSTALL ##
+if ! [ -e /usr/bin/dbbackup ]; then
+    echo "Installing dbdbackup..."
+    cp $SCRIPT /usr/bin/dbbackup
+    chmod +x /usr/bin/dbbackup
+fi
+if ! crontab -l |grep -q dbbackup; then
+    echo "creating cron job..."
+    crontab -l >/tmp/mycron
+    sed -i "/dbbackup/d" /tmp/mycron
+    echo "@reboot $SCRIPT" >>/tmp/mycron
+    echo "*/10 * * * * /usr/bin/dbbackup" >>/tmp/mycron
+    crontab /tmp/mycron
+    rm /tmp/mycron
+    /etc/init.d/cron restart
+    echo "The backup files will be saved in /data/*_dbbackup.tgz"
+fi
+exit 0

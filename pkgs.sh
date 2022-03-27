@@ -1,0 +1,118 @@
+#!/bin/sh
+
+# MANIFEST=+ORIGTARGET+ORIGDEVICE-DEVREMOVES-USERREMOVED+INDEPENDENTS+DEPENDENTS=+TARGETINSTALLED+DEVINSTALLED+INDEPENDENTS+DEPENDENTS
+# +TARGETINSTALLED=xORIGTARGETxMANIFEST
+# +DEVINSTALLED=xORIGDEVICExMANIFEST
+# +TARGETREMOVED=+ORIGTARGET-TARGETINSTALLED
+# +DEVREMOVED=+ORIGDEVICE-DEVINSTALLED
+# +DEFAULTS=+ORIGTARGET+ORIGDEVICE-DEVREMOVES
+
+tim (){
+    read up rest </proc/uptime; t1="${up%.*}${up#*.}"
+    $@
+    read up rest </proc/uptime; t2="${up%.*}${up#*.}"
+    echo "$( awk "BEGIN {print ($t2-$t1)/100}" ) seconds"
+}
+
+ADD () { echo -e "$1\n$2" | sort -u ;}
+INTERSECT () { echo "$1" |grep -Ex "$2";} 
+AnotB () { echo "$1" |grep -Evx "$2" ;}
+dependentsof () { echo "$depdb" |grep -E "$( echo $1 |sed 's/^/^/; s/ / |^/g; s/$/ /')" |cut -d ' ' -f 2- |tr ' ' '\n' |awk 'NF' |sort -u ;}
+xpandprovided () { echo "$1 "$(echo "$provdb" |grep  -Ew "$1") | tr ' ' '\n' |awk 'NF' | sort -u ;}
+
+reset
+## ORIGDEVICE: list of device specific packages
+echo -n "Downloading list of device specific packages..."
+. /etc/openwrt_release
+TARGET=$(echo "$DISTRIB_TARGET" | awk -F"/" '{print $1}')
+SUBTARGET=$(echo "$DISTRIB_TARGET" | awk -F"/" '{print $2}')
+DEVICE=$(cat /etc/build.config | grep -E '^CONFIG_TARGET_'$TARGET'_'$SUBTARGET'_DEVICE_' | sed 's/^CONFIG_TARGET_'$TARGET'_'$SUBTARGET'_DEVICE_//;s/=y$//')
+URL1=https://raw.githubusercontent.com/openwrt/openwrt/master/target/linux/$TARGET/image/$SUBTARGET.mk
+ORIGDEVICE=$(wget -q $URL1 -O - | sed ':a;N;$!ba;s/\\\n//g;s/\t//g' | grep -E '^define Device/|DEVICE_PACKAGES :=' | sed 's/DEVICE_PACKAGES := //g' | tr '\n' ' ' | tr -s ' ' | sed 's|define Device/|\n|g;s/ &//g' | grep "^$DEVICE " | cut -d ' ' -f 2- | tr ' ' '\n' | sed '/^-/d'|awk 'NF' | sort) && echo "success."
+
+## ORIGTARGET: list of target architecture specific packages
+echo -n "Downloading list of target architecture scpecific packages..."
+URL2=https://downloads.openwrt.org/snapshots/targets/$TARGET/$SUBTARGET/openwrt-$TARGET-$SUBTARGET.manifest
+ORIGTARGET=$(wget -q $URL2 -O - | awk '{print $1}' | sort -u) && echo "success."
+
+## DEVREMOVES: list of the packages removed per device
+echo -n "Downloading list of default removed target packages..."
+DEVREMOVES=$(wget -q $URL1 -O - | sed ':a;N;$!ba;s/\\\n//g;s/\t//g' | grep -E '^define Device/|DEVICE_PACKAGES :=' | sed 's/DEVICE_PACKAGES := //g' | tr '\n' ' ' | tr -s ' ' | sed 's|define Device/|\n|g;s/ &//g' | grep "^$DEVICE " | cut -d ' ' -f 2- | tr ' ' '\n' | grep '^-' |cut -c2- |awk 'NF' |sort) && echo "success."
+
+## DEFAULTS: list of installed default packages for the target and device
+echo -n "Identifying installed default packages..."
+DEFAULTS=$( AnotB "$(ADD "$ORIGTARGET" "$ORIGDEVICE")" "$DEVREMOVES" ) && echo "success."
+
+## MANIFEST: list of installed packages
+echo -n "Acquiring local package manifest..."
+MANIFEST=$(cat /usr/lib/opkg/status | grep "^Package" | cut -d ' ' -f 2- | sort -u) && echo "success."
+
+## USERREMOVED: list of manually removed default packages
+echo -n "Identifying default packages removed by user..."
+USERREMOVED=$( AnotB "$DEFAULTS" "$MANIFEST") && echo "success."
+
+## depdb: contains all the packages in the downloaded database followed by its dependencies
+echo -n "Retrieving the dependents database..."
+depdb=$(cat /usr/lib/opkg/status | grep -E "^Package:|^Depends:" | tr '\n' ' ' | sed 's/Package: /\n/g;s/Depends: //g;s/,//g' |sed 's/([^)]*)//g' |tr -s ' '|sort) && echo "success."
+
+## db: contains the OpenWrt package info
+echo -n "Retrieving local copy of global package database..."
+[ -e "/tmp/opkg-lists/openwrt_base" ] || opkg update
+db=
+for section in base core luci packages routing telephony; do
+    db=$db$'\n\n'$(gzip -c -d /tmp/opkg-lists/openwrt_$section)
+done && echo "success."
+
+## provdb: each line contains a package in the OpenWrt database followed by its provided packages
+echo -n "Simplifying the provided packages database..."
+provdb=$(echo -e "$db" | grep -E "^Package:|^Provides:" | tr '\n' ' ' | sed 's/Package: /\n/g' | grep 'Provides:' | sed 's/Provides: //g;s/,//g' |sed 's/([^)]*)//g' | sort) && echo "success."
+
+## DEPENDENTSPOOL: contains the list of all dependent packages, acrhitecture's dependents, and its provided packages.
+echo -n "Generating dependents pool..."
+DEPENDENTSPOOL=$(xpandprovided "$( ADD "$(dependentsof "$MANIFEST")"  "$DEFAULTS" )" )
+
+## INDEPENDENTS: Contains the list of all local independent packages
+echo -n "Adding provided packages to dependents..."
+INDEPENDENTS=$(AnotB "$MANIFEST" "$DEPENDENTSPOOL") && echo "success."
+
+## INDEPENDENTS: Contains the list of all local independent packages
+echo -n "Adding provided packages to dependents..."
+DEPENDENTS=$( AnotB "$MANIFEST" "$( ADD "$INDEPENDENTS" "$DEFAULTS" )" ) && echo "success."
+
+## TARGETREMOVED: contains the list of removed target architecture specific packages
+echo -n "Identifying removed target packages..."
+TARGETREMOVED=$( AnotB "$ORIGTARGET" "$MANIFEST") && echo "success."
+
+## DEVREMOVED: contains the list of removed device specific packages
+echo -n "Identifying removed device packages..."
+DEVREMOVED=$( AnotB "$ORIGDEVICE" "$MANIFEST") && echo "success."
+
+## TARGETINSTALLED: contains the list of installed target architecture specific packages
+echo -n "Identifying installed target architecture specific packages..."
+TARGETINSTALLED=$( INTERSECT "$ORIGTARGET" "$MANIFEST") && echo "success."
+
+## TARGETINSTALLED: contains the list of installed target architecture specific packages
+echo -n "Identifying installed device specific packages..."
+DEVICEINSTALLED=$( AnotB "$ORIGDEVICE" "$REMOVED") && echo "success."
+
+## TARGETINSTALLED: contains the list of installed target architecture specific packages
+echo -n "Calculating minimum package set for this device..."
+MINIMUMDEVICE=$( AnotB "$DEFAULTS" "$( dependentsof "$DEFAULTS")") && echo "success."
+
+# OUTPUT
+
+report() { echo -e "\n$(echo "$2" |wc -w) $1:\n"$2; }
+report "INSTALLED PACKAGES" "$MANIFEST"
+report "ORIGINAL TARGET PACKAGES" "$ORIGTARGET"
+report "ORIGINAL DEVICE PACKAGES" "$ORIGDEVICE"
+report "PACKAGES REMOVED BY DEVICE REQUIREMENTS" "$DEVREMOVES"
+report "PACKAGES MANUALLY REMOVED FROM DEFAULT SET" "$USERREMOVED"
+# report "Target installed packages" "$TARGETINSTALLED"
+# report "Device installed packages" "$DEVICEINSTALLED"
+report "INDEPENDENT INSTALLED PACKAGES (Selected by user)" "$INDEPENDENTS"
+report "DEPENDENT INSTALLED PACKAGES (Automatically retrieved)" "$DEPENDENTS"
+report "MINIMUM DEVICE PACKAGES" "$MINIMUMDEVICE"
+
+echo -e "\nMINIMAL SET OF DIFF PACKAGES:"
+echo "$USERREMOVED" | sed 's/^/-/g'
+echo "$INDEPENDENTS"

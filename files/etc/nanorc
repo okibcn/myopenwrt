@@ -1,0 +1,44 @@
+## Nano editor configuration file - This version is compatible with nano-plus package
+
+## Settings ##
+set multibuffer         # Open multiple files
+set indicator           # show vertical scroll bar
+set minibar             # show the info bar
+set linenumbers         # show line numbers Alt+N to toggle
+#set mouse               # enable mouse support Alt+M to toggle
+set autoindent          # auto indent
+set nonewlines          # don't insert newline at the end of the file
+set softwrap            # wrap lines
+set atblanks            # wrap lines at word boundaries
+unset casesensitive     # non case sensitive search
+set nohelp              # don't display help footer (F1) to display help
+set suspend             # Allow nano to be suspended
+set tabsize 4           # tab stops every 4 spaces
+set tabstospaces        # don't convert tabs to spaces
+set constantshow        # show cursor position and its unicode
+set zap                 # Allows you to highlight text (CTRL+SHIFT+ARROW) and delete it with backspace.
+#set positionlog         # Remembers position between sessions
+#set backup             # make backups
+set backupdir "/tmp"    # where to put the backups
+#set speller "aspell -x -c"  # Sets what spelling utility to use. 
+
+## Keybindings ##
+bind ^X cut main        # CTRL+X - Cut
+bind ^C copy main       # CTRC+C - Copy
+bind ^V paste all       # CTRL+V - Paste from GUI
+bind ^B paste all       # CTRL+B - Paste fron nano
+bind ^Q exit all        # CTRL+Q - Quit program
+bind ^O insert all      # CTRL+O - Open new file
+bind ^S savefile main   # CTRL+S - Save
+bind ^Z undo all        # CTRL+Z - Undo
+bind ^Y redo all        # CTRL+Y - Redo
+bind ^H replace main    # CTRL+H - Replace
+bind ^F whereis main    # CTRL+F - Find
+bind F3 findnext main   # F3     - Find next
+bind F5 refresh all     # F5     - refresh screen
+#bind ^/ comment main    # CTRL+/ - Comment lines
+
+## Syntax highlighting ##
+#include /usr/share/nano/*.nanorc
+#include /usr/share/nano/extra/*.nanorc
+
