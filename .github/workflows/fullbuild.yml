@@ -98,7 +98,11 @@ jobs:
         tag_list=$(git tag -l)
         deltag_list=$(echo "$tag_list" | grep -v "$release_list")
         echo -e "DELETING TAGS:\n$deltag_list"
-        for t in $(echo "$tag_list" | grep -v "$release_list")
-        do
-            git tag -d $t
-        done
+        git tag -d $(echo "$tag_list" | grep -v "$release_list")
+        git fetch
+        git push origin --delete $(echo "$tag_list" | grep -v "$release_list")
+        git tag -d $(echo "$tag_list" | grep -v "$release_list")
+      # for t in $(echo "$tag_list" | grep -v "$release_list")
+      # do
+      #     git tag -d $t
+      # done
