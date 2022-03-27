@@ -106,7 +106,7 @@ jobs:
         git push origin --delete $(echo "$tag_list" | grep -v "$release_list")
         echo  STEP 4
         git tag -d $(echo "$tag_list" | grep -v "$release_list")
-        echo  DONE
+        echo  D ONE
       # for t in $(echo "$tag_list" | grep -v "$release_list")
       # do
       #     git tag -d $t
