@@ -70,7 +70,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ matrix.device }}-OpenWrt_${{ env.BUILD }}-${{ env.OUTTAG }}
+        tag_name: ${{ matrix.device }}-OpenWrt_${{ env.BUILD }}
         files: ${{ env.OUTDIR }}/*
         body: |
           Device profile: `${{ env.PROFILE }}`
