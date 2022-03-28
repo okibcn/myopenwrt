@@ -82,14 +82,14 @@ jobs:
           Custom Packages: `${{ env.DIFF_PACKAGES }}`
 
 
-    - name: REMOVE UNUSED TAGS
+    - name: KEEP LAST 2 RELEASES
       env:
         keep_latest: 2
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         delrelease_list=$(gh release list |awk '{print $1}' |grep '^'${{ matrix.device }} |sed -e '1,'$keep_latest'd')
         echo -e "DELETING RELESES:\n$delrelease_list"
-        for r in $(gh release list |awk '{print $1}' |grep '^'${{ matrix.device }} |sed -e '1,'$keep_latest'd')
+        for r in $(echo "$delrelease_list")
         do
           gh release delete $r -y
         done
