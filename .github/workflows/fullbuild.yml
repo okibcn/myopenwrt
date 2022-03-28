@@ -84,32 +84,23 @@ jobs:
 
     - name: REMOVE UNUSED TAGS
       env:
-        keep_latest: 6
+        keep_latest: 2
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        delrelease_list=$(gh release list|awk '{print $1}'|sed -e '1,'$keep_latest'd')
+        delrelease_list=$(gh release list |awk '{print $1}' |grep '^'${{ matrix.device }} |sed -e '1,'$keep_latest'd')
         echo -e "DELETING RELESES:\n$delrelease_list"
         for r in $(gh release list|awk '{print $1}'|sed -e '1,'$keep_latest'd')
         do
           gh release delete $r -y
         done
-        git clone https://github.com/okibcn/myopenwrt  clonedrepo
-        cd clonedrepo
-        release_list=$(gh release list|awk '{print $1}')
-        echo -e "REMAINING RELESES:\n$release_list"
-        tag_list=$(git tag -l)
-        deltag_list=$(echo "$tag_list" | grep -v "$release_list")
-        echo -e "DELETING TAGS:\n$deltag_list"
-        echo  STEP 1
-        git tag -d $(echo "$tag_list" | grep -v "$release_list")
-        echo  STEP 2
-        git fetch
-        echo  STEP 3
-        git push origin --delete $(echo "$tag_list" | grep -v "$release_list")
-        echo  STEP 4
-        git tag -d $(echo "$tag_list" | grep -v "$release_list")
-        echo  D ONE
-      # for t in $(echo "$tag_list" | grep -v "$release_list")
-      # do
-      #     git tag -d $t
-      # done
+      # ## Delete tags
+      # release_list=$(gh release list|awk '{print $1}')
+      # echo -e "REMAINING RELESES:\n$release_list"
+      # tag_list=$(git tag -l)
+      # deltag_list=$(echo "$tag_list" | grep -v "$release_list")
+      # echo -e "DELETING TAGS:\n$deltag_list"
+      # echo  STEP 1
+      # git tag -d $(echo "$tag_list" | grep -v "$release_list")
+      # echo  STEP 2
+      # git push origin --delete $(echo "$tag_list" | grep -v "$release_list")
+      # echo DONE
