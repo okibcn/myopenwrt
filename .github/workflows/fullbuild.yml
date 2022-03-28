@@ -82,7 +82,7 @@ jobs:
           Custom Packages: `${{ env.DIFF_PACKAGES }}`
 
 
-    - name: KEEP LAST 2 RELEASES
+    - name: KEEP LAST RELEASES OF DEVICE ${{ matrix.device }}
       env:
         keep_latest: 2
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
