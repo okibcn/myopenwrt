@@ -25,12 +25,12 @@ jobs:
 
     - name: DOWNLOAD OPENWRT KITCHEN and CONFIG FOR ${{ matrix.device }}
       run: ./$MYSCRIPT set_${{ matrix.device }}
-        
+
     - name: BUILD IMAGE
       run: |
         cd ${{ matrix.device }}
-#        ../$MYSCRIPT fakeall
         ../$MYSCRIPT makeall
+      #  ../$MYSCRIPT fakeall
         
     - name: PREPARE UPLOAD FOLDER
       id: prepare
