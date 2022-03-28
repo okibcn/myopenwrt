@@ -157,7 +157,7 @@ set_R6020() {
     DIFF_PACKAGES="nano-plus htop iperf3 luci wpad-mesh-wolfssl -wpad-basic-wolfssl luci-app-vnstat2 luci-app-nlbwmon"
     DIFF_CONFIG=R6020.config
     REPO=
-    BRANCH=
+    BRANCH="openwrt-22.03"
     dl_ow $DIR $REPO $BRANCH
     set_packages "$DIFF_PACKAGES"
 #    add_argon
