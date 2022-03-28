@@ -7,20 +7,12 @@
 # +DEVREMOVED=+ORIGDEVICE-DEVINSTALLED
 # +DEFAULTS=+ORIGTARGET+ORIGDEVICE-DEVREMOVES
 
-tim (){
-    read up rest </proc/uptime; t1="${up%.*}${up#*.}"
-    $@
-    read up rest </proc/uptime; t2="${up%.*}${up#*.}"
-    echo "$( awk "BEGIN {print ($t2-$t1)/100}" ) seconds"
-}
-
 ADD () { echo -e "$1\n$2" | sort -u ;}
 INTERSECT () { echo "$1" |grep -Ex "$2";} 
 AnotB () { echo "$1" |grep -Evx "$2" ;}
 dependentsof () { echo "$depdb" |grep -E "$( echo $1 |sed 's/^/^/; s/ / |^/g; s/$/ /')" |cut -d ' ' -f 2- |tr ' ' '\n' |awk 'NF' |sort -u ;}
 xpandprovided () { echo "$1 "$(echo "$provdb" |grep  -Ew "$1") | tr ' ' '\n' |awk 'NF' | sort -u ;}
 
-reset
 ## ORIGDEVICE: list of device specific packages
 echo -n "Downloading list of device specific packages..."
 . /etc/openwrt_release
@@ -53,7 +45,7 @@ USERREMOVED=$( AnotB "$DEFAULTS" "$MANIFEST") && echo "success."
 
 ## depdb: contains all the packages in the downloaded database followed by its dependencies
 echo -n "Retrieving the dependents database..."
-depdb=$(cat /usr/lib/opkg/status | grep -E "^Package:|^Depends:" | tr '\n' ' ' | sed 's/Package: /\n/g;s/Depends: //g;s/,//g' |sed 's/([^)]*)//g' |tr -s ' '|sort) && echo "success."
+depdb=$(cat /usr/lib/opkg/status | grep -E "^Package:|^Depends:" | tr '\n' ' ' | sed 's/Package: /\n/g;s/Depends: //g;s/,//g;s/([^)]*)//g' |tr -s ' '|sort) && echo "success."
 
 ## db: contains the OpenWrt package info
 echo -n "Retrieving local copy of global package database..."
@@ -65,7 +57,7 @@ done && echo "success."
 
 ## provdb: each line contains a package in the OpenWrt database followed by its provided packages
 echo -n "Simplifying the provided packages database..."
-provdb=$(echo -e "$db" | grep -E "^Package:|^Provides:" | tr '\n' ' ' | sed 's/Package: /\n/g' | grep 'Provides:' | sed 's/Provides: //g;s/,//g' |sed 's/([^)]*)//g' | sort) && echo "success."
+provdb=$(echo -e "$db" | grep -E "^Package:|^Provides:" | tr '\n' ' ' | sed 's/Package: /\n/g' | grep 'Provides:' | sed 's/Provides: //g;s/,//g;s/([^)]*)//g' | sort) && echo "success."
 
 ## DEPENDENTSPOOL: contains the list of all dependent packages, acrhitecture's dependents, and its provided packages.
 echo -n "Generating dependents pool..."
