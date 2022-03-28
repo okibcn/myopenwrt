@@ -29,8 +29,8 @@ jobs:
     - name: BUILD IMAGE
       run: |
         cd ${{ matrix.device }}
-        ../$MYSCRIPT fakeall
-#        ../$MYSCRIPT makeall
+#        ../$MYSCRIPT fakeall
+        ../$MYSCRIPT makeall
         
     - name: PREPARE UPLOAD FOLDER
       id: prepare
@@ -95,12 +95,5 @@ jobs:
         done
       # ## Delete tags
       # release_list=$(gh release list|awk '{print $1}')
-      # echo -e "REMAINING RELESES:\n$release_list"
-      # tag_list=$(git tag -l)
-      # deltag_list=$(echo "$tag_list" | grep -v "$release_list")
-      # echo -e "DELETING TAGS:\n$deltag_list"
-      # echo  STEP 1
-      # git tag -d $(echo "$tag_list" | grep -v "$release_list")
-      # echo  STEP 2
-      # git push origin --delete $(echo "$tag_list" | grep -v "$release_list")
-      # echo DONE
+      # git tag -d $(git tag -l | grep -v "$release_list")
+      # git push origin --delete $(git tag -l | grep -v "$release_list")
