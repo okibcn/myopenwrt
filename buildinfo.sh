@@ -8,13 +8,32 @@
 # +DEFAULTS=+ORIGTARGET+ORIGDEVICE-DEVREMOVES
 
 ## Kitchen info source:
-# Device and target packages: tmp/info/.targetinfo_$TARGET
+# Device and target packages: tmp/info/.targetinfo-$TARGET
 
-ADD () { echo -e "$1\n$2" | sort -u ;}
-INTERSECT () { echo "$1" |grep -Ex "$2";} 
+AorB () { echo -e "$1\n$2" | sort -u ;}
+AandB () { echo "$1" |grep -Ex "$2";} 
 AnotB () { echo "$1" |grep -Evx "$2" ;}
 dependentsof () { echo "$depdb" |grep -E "$( echo $1 |sed 's/^/^/; s/ / |^/g; s/$/ /')" |cut -d ' ' -f 2- |tr ' ' '\n' |awk 'NF' |sort -u ;}
 xpandprovided () { echo "$1 "$(echo "$provdb" |grep  -Ew "$1") | tr ' ' '\n' |awk 'NF' | sort -u ;}
+
+
+
+make defconfig
+MANIFEST=$( cat .config |grep ^CONFIG_PACKAGE_ |sed 's/^CONFIG_PACKAGE_//;s/=y$//' |tr ' ' '\n' |awk 'NF' |sort -u )
+
+TARGET=$( cat .config |grep ^CONFIG_TARGET_ |head -n 1 |sed 's/^CONFIG_TARGET_//;s/=y$//' )
+SUBTARGET=$( cat .config |grep ^CONFIG_TARGET_ |sed '2q;d' |sed 's/^CONFIG_TARGET_'$TARGET'_//;s/=y$//' )
+DEVICE=$( cat .config |grep -E '^CONFIG_TARGET_'$TARGET'_'$SUBTARGET'_DEVICE_' |sed 's/^CONFIG_TARGET_'$TARGET'_'$SUBTARGET'_DEVICE_//;s/=y$//' )
+
+ORIGTARGET=$(cat tmp/info/.targetinfo-$TARGET |grep -E "^Target: |^Default-Packages: " |tr '\n' ' ' |sed 's/Target: /\n/g;s/Default-Packages: //g' |grep "^$TARGET " |cut -d ' ' -f 2- |tr ' ' '\n' |awk 'NF' |sort -u )
+ORIGSUBTARGET=$(cat tmp/info/.targetinfo-$TARGET |grep -E "^Target: |^Default-Packages: " |tr '\n' ' ' |sed 's/Target: /\n/g;s/Default-Packages: //g' |grep "^$TARGET/$SUBTARGET " |cut -d ' ' -f 2- |tr ' ' '\n' |awk 'NF' |sort -u )
+ORIGDEVICE=$(cat tmp/info/.targetinfo-$TARGET |grep -E "^Target-Profile: |^Target-Profile-Packages: " |tr '\n' ' ' |sed 's/Target-Profile: DEVICE_/\n/g;s/Target-Profile-Packages: //g' |grep "^$DEVICE " |cut -d ' ' -f 2- |tr ' ' '\n' |awk 'NF' |sort -u )
+
+DEFAULTS=$(AorB "$ORIGSUBTARGET" "$ORIGDEVICE")
+
+cat .packageinfo-* | grep -E "^Package:|^Depends:" | tr '\n' ' ' | sed 's/Package: /\n/g;s/Depends: //g;s/+USE_GLIBC://g;s/+//g' |tr -s ' '|sort
+
+depdb=$( cat tmp/.config-package.in |grep -E "^\t config PACKAGE_|^\t\tselect PACKAGE_" |sed 's/^CONFIG_PACKAGE_//;s/=y$//' |tr ' ' '\n' |awk 'NF' |sort -u )
 
 ## ORIGDEVICE: list of device specific packages
 echo -n "Downloading list of device specific packages..."
