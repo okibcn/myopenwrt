@@ -8,7 +8,7 @@ name: OPENWRT_FULL_BUILD
 
 on: 
   schedule:
-    - cron: '* 1,13 * * *'
+    - cron: '* 8,20 * * *'
   workflow_dispatch:
 
 env:

@@ -7,9 +7,6 @@
 # +DEVREMOVED=+ORIGDEVICE-DEVINSTALLED
 # +DEFAULTS=+ORIGTARGET+ORIGDEVICE-DEVREMOVES
 
-## Kitchen info source:
-# Device and target packages: tmp/info/.targetinfo_$TARGET
-
 ADD () { echo -e "$1\n$2" | sort -u ;}
 INTERSECT () { echo "$1" |grep -Ex "$2";} 
 AnotB () { echo "$1" |grep -Evx "$2" ;}
