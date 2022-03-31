@@ -21,10 +21,16 @@ jobs:
       matrix:
         device: [ E8450, R7800, R6020 ]
     steps:
-    - uses: actions/checkout@v2
+
+    - name: CHECKOUT REPOSITORY
+      uses: actions/checkout@v2
 
     - name: DOWNLOAD OPENWRT KITCHEN and CONFIG FOR ${{ matrix.device }}
       run: ./$MYSCRIPT set_${{ matrix.device }}
+
+    - name: DEBUG tmate session
+      uses: mxschmitt/action-tmate@v3
+     ## More info at https://til.simonwillison.net/github-actions/debug-tmate
 
     - name: BUILD IMAGE
       run: |

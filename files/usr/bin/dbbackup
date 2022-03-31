@@ -74,7 +74,7 @@ if ! crontab -l |grep -q dbbackup; then
     crontab -l >/tmp/mycron
     sed -i "/dbbackup/d" /tmp/mycron
     echo "@reboot $SCRIPT" >>/tmp/mycron
-    echo "*/10 * * * * /usr/bin/dbbackup" >>/tmp/mycron
+    echo "9,19,29,39,49,59 * * * * /usr/bin/dbbackup" >>/tmp/mycron
     crontab /tmp/mycron
     rm /tmp/mycron
     /etc/init.d/cron restart
