@@ -14,7 +14,7 @@ on:
       debug_enabled:
         description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'     
         required: false
-        default: 'false'
+        default: false
 
 env:
   MYSCRIPT: full.sh
@@ -35,7 +35,7 @@ jobs:
         
     - name: DEBUG tmate session
       uses: mxschmitt/action-tmate@v3
-        if: $( [ "$github.event_name" == 'workflow_dispatch' && "$debug_enabled" == 'true' ] && echo 'true')
+      if: github.event_name" == 'workflow_dispatch' && github.event.inputs.debug_enabled
      ## More info at https://til.simonwillison.net/github-actions/debug-tmate
      ## or https://github.com/mxschmitt/action-tmate 
 
