@@ -10,6 +10,11 @@ on:
   schedule:
     - cron: '5 1,12,21 * * *'
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'     
+        required: false
+        default: false
 
 env:
   MYSCRIPT: full.sh
@@ -27,10 +32,12 @@ jobs:
 
     - name: DOWNLOAD OPENWRT KITCHEN and CONFIG FOR ${{ matrix.device }}
       run: ./$MYSCRIPT set_${{ matrix.device }}
-
+        
     - name: DEBUG tmate session
       uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
      ## More info at https://til.simonwillison.net/github-actions/debug-tmate
+     ## or https://github.com/mxschmitt/action-tmate 
 
     - name: BUILD IMAGE
       run: |
