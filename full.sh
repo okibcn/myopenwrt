@@ -213,6 +213,7 @@ instruction=$1
 shift
 $instruction $@
 if [ -n "$GITHUB_ACTIONS" ]; then
+    cp ~/work/myopenwrt/myopenwrt/files/etc/nanorc ~/.nanorc
     echo "EXPORTING CONFIGURATION TO GITHUB ACTION $GITHUB_RUN_NUMBER"
     echo "PROFILE=$PROFILE" >>$GITHUB_ENV
     echo "TARGET=$TARGET" >>$GITHUB_ENV

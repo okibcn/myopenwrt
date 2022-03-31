@@ -7,23 +7,25 @@ backup() {
     ## BACKUP RRD (collectd) ##
     if [ -d /var/rrd/ ]; then
         cd /var
-        tar -czvf /data/rrd_dbbackup.tar.gz rrd/*
+        tar -czvf /data/rrd_dbbackup.tar.gz rrd/* > /dev/null 2>&1
         mv /data/rrd_dbbackup.tar.gz /data/rrd_dbbackup.tgz
     fi
 
     ## BACKUP VNSTAT ##
     if [ -d /var/lib/vnstat/ ]; then
         cd /var/lib
-        tar -czvf /data/vnstat_dbbackup.tar.gz vnstat/*
+        tar -czvf /data/vnstat_dbbackup.tar.gz vnstat/* > /dev/null 2>&1
         mv /data/vnstat_dbbackup.tar.gz /data/vnstat_dbbackup.tgz
     fi
 
     ## BACKUP NLBWMON ##
     if [ -d /var/lib/nlbwmon/ ]; then
         cd /var/lib
-        tar -czvf /data/nlbwmon_dbbackup.tar.gz nlbwmon/*
+        tar -czvf /data/nlbwmon_dbbackup.tar.gz nlbwmon/* > /dev/null 2>&1
         mv /data/nlbwmon_dbbackup.tar.gz /data/nlbwmon_dbbackup.tgz
     fi
+    logger -t dbbackup "RRD, VNSTAT and NLBWMON database backup done."
+
 }
 
 restore() {
@@ -31,7 +33,7 @@ restore() {
     if [ -e /data/rrd_dbbackup.tgz ]; then
         /etc/init.d/collectd stop
         cd /var
-        tar xzvf /data/rrd_dbbackup.tgz
+        tar xzvf /data/rrd_dbbackup.tgz > /dev/null 2>&1
         /etc/init.d/collectd enable
         /etc/init.d/collectd start
     fi
@@ -40,7 +42,7 @@ restore() {
     if [ -e /data/vnstat_dbbackup.tgz ]; then
         /etc/init.d/vnstat stop
         cd /var/lib
-        tar xzvf /data/vnstat_dbbackup.tgz
+        tar xzvf /data/vnstat_dbbackup.tgz > /dev/null 2>&1
         /etc/init.d/vnstat enable
         /etc/init.d/vnstat start
     fi
@@ -49,10 +51,11 @@ restore() {
     if [ -e /data/nlbwmon_dbbackup.tgz ]; then
         /etc/init.d/nlbwmon stop
         cd /var/lib
-        tar xzvf /data/nlbwmon_dbbackup.tgz
+        tar xzvf /data/nlbwmon_dbbackup.tgz > /dev/null 2>&1
         /etc/init.d/nlbwmon enable
         /etc/init.d/nlbwmon start
     fi
+    logger -t dbbackup "RRD, VNSTAT and NLBWMON databases restored done."
 }
 
 SCRIPT="$(
@@ -74,7 +77,7 @@ if ! crontab -l |grep -q dbbackup; then
     crontab -l >/tmp/mycron
     sed -i "/dbbackup/d" /tmp/mycron
     echo "@reboot $SCRIPT" >>/tmp/mycron
-    echo "9,19,29,39,49,59 * * * * /usr/bin/dbbackup" >>/tmp/mycron
+    echo "9,19,29,39,49,59 * * * * /usr/bin/dbbackup > /dev/null 2>&1" >>/tmp/mycron
     crontab /tmp/mycron
     rm /tmp/mycron
     /etc/init.d/cron restart
