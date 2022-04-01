@@ -9,6 +9,8 @@ name: OPENWRT_FULL_BUILD
 on: 
   schedule:
     - cron: '5 1,12,21 * * *'
+  # runs at 6:05 pm, 5:05 am and 2:05 pm
+  
   workflow_dispatch:
     inputs:
       debug_enabled:

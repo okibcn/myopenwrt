@@ -139,6 +139,22 @@ set_E8450() {
     TARGET=mediatek
     ARCH=mt7622
     DIFF_CONFIG=E8450.config
+    DIFF_PACKAGES="-libustream-wolfssl -libwolfssl -wpad-basic-wolfssl 6in4 6rd 6to4 auc blockd ca-certificates ccrypt collectd-mod-conntrack collectd-mod-cpufreq collectd-mod-dhcpleases collectd-mod-entropy collectd-mod-ping collectd-mod-sqm collectd-mod-thermal collectd-mod-uptime collectd-mod-wireless cryptsetup curl ddns-scripts-noip diffutils e2fsprogs f2fs-tools gdbserver hostapd-utils htop ip6tables-mod-nat ip6tables-nft iperf3 iptables-mod-extra irqbalance kmod-fs-cifs kmod-fs-exfat kmod-fs-ext4 kmod-fs-f2fs kmod-fs-hfs kmod-fs-hfsplus kmod-fs-msdos kmod-fs-nfs-v3 kmod-fs-nfs-v4 kmod-nls-cp1250 kmod-nls-cp850 kmod-nls-iso8859-15 kmod-usb-storage-uas luci-app-adblock luci-app-argon-config luci-app-attendedsysupgrade luci-app-banip luci-app-bcp38 luci-app-commands luci-app-ddns luci-app-nlbwmon luci-app-openvpn luci-app-sqm luci-app-statistics luci-app-ttyd luci-app-uhttpd luci-app-upnp luci-app-vnstat2 luci-app-wireguard luci-ssl-openssl luci-theme-argon mc nano-full ncdu nfs-utils ntfs-3g openvpn-openssl patch ppp-mod-pptp tc-mod-iptables tcpdump-mini tor tree wget-ssl wpad-openssl"
+    REPO=
+    BRANCH=
+    dl_ow $DIR $REPO $BRANCH
+    set_packages "$DIFF_PACKAGES"
+    add_argon
+    add_nano-full
+}
+
+set_E8450old() {
+    DIR=E8450
+    PROFILE=linksys_e8450-ubi
+    RELEASE=snapshots
+    TARGET=mediatek
+    ARCH=mt7622
+    DIFF_CONFIG=E8450old.config
     DIFF_PACKAGES="openvpn-openssl tor iptables-mod-extra mc nano-full htop ncdu iperf3 irqbalance auc ca-certificates ca-buldle -wpad-basic-wolfssl -libustream-wolfssl -px5g-wolfssl wpad-openssl libustream-openssl luci-ssl-openssl luci luci-compat luci-app-attendedsysupgrade luci-app-vnstat2 luci-app-nlbwmon luci-app-adblock luci-app-banip luci-app-bcp38 luci-app-commands luci-app-ddns ddns-scripts-noip luci-app-openvpn luci-ssl-openssl luci-app-sqm luci-app-wireguard luci-app-upnp luci-app-uhttpd luci-app-statistics collectd-mod-conntrack collectd-mod-cpu collectd-mod-cpufreq collectd-mod-dhcpleases collectd-mod-entropy collectd-mod-exec collectd-mod-interface collectd-mod-iwinfo collectd-mod-load collectd-mod-memory collectd-mod-network collectd-mod-ping collectd-mod-rrdtool collectd-mod-sqm collectd-mod-thermal collectd-mod-uptime collectd-mod-wireless blockd cryptsetup e2fsprogs f2fs-tools kmod-fs-exfat kmod-fs-ext4 kmod-fs-f2fs kmod-fs-hfs kmod-fs-hfsplus kmod-fs-msdos kmod-fs-nfs kmod-fs-nfs-common kmod-fs-nfs-v3 kmod-fs-nfs-v4 kmod-fs-vfat kmod-nls-base kmod-nls-cp1250 kmod-nls-cp437 kmod-nls-cp850 kmod-nls-iso8859-1 kmod-nls-iso8859-15 kmod-nls-utf8 kmod-usb-storage kmod-usb-storage-uas libblkid ntfs-3g nfs-utils ip6tables-mod-nat 6in4 6rd 6to4 ip6tables-nft luci-app-ttyd"
     REPO=
     BRANCH=
