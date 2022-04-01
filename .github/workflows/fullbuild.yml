@@ -10,7 +10,7 @@ on:
   schedule:
     - cron: '5 1,12,21 * * *'
   # runs at 6:05 pm, 5:05 am and 2:05 pm
-  
+
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -33,7 +33,10 @@ jobs:
       uses: actions/checkout@v2
 
     - name: DOWNLOAD OPENWRT KITCHEN and CONFIG FOR ${{ matrix.device }}
-      run: ./$MYSCRIPT set_${{ matrix.device }}
+      run: | 
+        echo "TIMESTAMP=$(date +'%Y.%m.%d-%H%MZ')" >> $GITHUB_ENV
+        echo "Action started on "$( TZ=America/Los_Angeles date)"."
+        ./$MYSCRIPT set_${{ matrix.device }}
         
     - name: DEBUG SESSION
       uses: mxschmitt/action-tmate@v3
@@ -43,7 +46,6 @@ jobs:
 
     - name: BUILD IMAGE
       run: |
-        echo "TIMESTAMP=$(date +'%Y.%m.%d-%H%M')" >> $GITHUB_ENV
         cd ${{ matrix.device }}
         ../$MYSCRIPT makeall
       #  ../$MYSCRIPT fakeall
