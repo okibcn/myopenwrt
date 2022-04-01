@@ -33,7 +33,7 @@ jobs:
     - name: DOWNLOAD OPENWRT KITCHEN and CONFIG FOR ${{ matrix.device }}
       run: ./$MYSCRIPT set_${{ matrix.device }}
         
-    - name: DEBUG tmate session
+    - name: DEBUG SESSION
       uses: mxschmitt/action-tmate@v3
       if: github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled == 'true'
      ## More info at https://til.simonwillison.net/github-actions/debug-tmate
@@ -58,12 +58,6 @@ jobs:
         echo "BUILD=$( awk -F - '{print $1}' <<< $RELEASE )" >> $GITHUB_ENV
         echo "::set-output name=status::success"
         
-    # - name: UPLOAD ARTIFACT
-    #   uses: actions/upload-artifact@main
-    #   with:
-    #     name: OpenWrt_firmware-${{ env.OUTTAG }}
-    #     path: ${{ env.OUTDIR }}
-
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
       with:
@@ -94,6 +88,11 @@ jobs:
           Custom config: `${{ env.DIFF_CONFIG }}`
           Custom Packages: `${{ env.DIFF_PACKAGES }}`
 
+    # - name: UPLOAD ARTIFACT
+    #   uses: actions/upload-artifact@main
+    #   with:
+    #     name: OpenWrt_firmware-${{ env.OUTTAG }}
+    #     path: ${{ env.OUTDIR }}
 
     - name: KEEP LAST RELEASES OF DEVICE ${{ matrix.device }}
       env:
