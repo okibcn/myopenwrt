@@ -45,10 +45,12 @@ set_packages(){
     array=($(echo $@ | tr ' ' '\n'))
     for i in ${array[@]}; do
         if [ "${i:0:1}" = "-" ]; then
-            sed -i "/CONFIG_PACKAGE_"${i:1}"/d" .config
+            sed -i "/CONFIG_PACKAGE_"${i:1}"=/d" .config
+            sed -i "/CONFIG_PACKAGE_"${i:1}" /d" .config
             echo "# CONFIG_PACKAGE_${i:1} is not set" >>.config
         else
-            sed -i "/CONFIG_PACKAGE_"$i"/d" .config
+            sed -i "/CONFIG_PACKAGE_"$i"=/d" .config
+            sed -i "/CONFIG_PACKAGE_"$i" /d" .config
             echo "CONFIG_PACKAGE_$i=y" >>.config
         fi
     done
