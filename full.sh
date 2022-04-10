@@ -173,14 +173,32 @@ set_R6020() {
     RELEASE="snapshots"
     TARGET="ramips"
     ARCH="mt76x8"
-    DIFF_PACKAGES="nano-plus htop iperf3 luci wpad-mesh-wolfssl -wpad-basic-wolfssl luci-app-vnstat2 luci-app-nlbwmon"
+    DIFF_PACKAGES="luci"     
+    # nano-plus htop iperf3 luci wpad-mesh-wolfssl -wpad-basic-wolfssl luci-app-vnstat2 luci-app-nlbwmon"
     DIFF_CONFIG=R6020.config
     REPO=https://github.com/openwrt/openwrt
     BRANCH=openwrt-22.03
     dl_ow $DIR $REPO $BRANCH
     set_packages "$DIFF_PACKAGES"
 #    add_argon
-    add_nano-full
+#    add_nano-full
+}
+
+set_R6020nocss() {
+    DIR=R6020
+    PROFILE="netgear_r6020"
+    RELEASE="snapshots"
+    TARGET="ramips"
+    ARCH="mt76x8"
+    DIFF_PACKAGES="luci"     
+    # nano-plus htop iperf3 luci wpad-mesh-wolfssl -wpad-basic-wolfssl luci-app-vnstat2 luci-app-nlbwmon"
+    DIFF_CONFIG=R6020nocss.config
+    REPO=https://github.com/openwrt/openwrt
+    BRANCH=openwrt-22.03
+    dl_ow $DIR $REPO $BRANCH
+    set_packages "$DIFF_PACKAGES"
+#    add_argon
+#    add_nano-full
 }
 
 set_R7800() {

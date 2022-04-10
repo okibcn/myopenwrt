@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        device: [ E8450, R7800, R6020 ]
+        device: [ E8450, R7800, R6020, R6020nocss ]
     steps:
 
     - name: CHECKOUT REPOSITORY
