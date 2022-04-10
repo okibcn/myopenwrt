@@ -185,7 +185,7 @@ set_R6020() {
 }
 
 set_R6020nocss() {
-    DIR=R6020
+    DIR=R6020nocss
     PROFILE="netgear_r6020"
     RELEASE="snapshots"
     TARGET="ramips"
