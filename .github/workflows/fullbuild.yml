@@ -30,7 +30,7 @@ jobs:
     steps:
 
     - name: CHECKOUT REPOSITORY
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: DOWNLOAD OPENWRT KITCHEN and CONFIG FOR ${{ matrix.device }}
       run: | 
