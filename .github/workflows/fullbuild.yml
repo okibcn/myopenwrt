@@ -60,7 +60,7 @@ jobs:
         ls -als
         echo "OUTDIR=$PWD" >> $GITHUB_ENV
         echo "BUILD=$( awk -F - '{print $1}' <<< $RELEASE )" >> $GITHUB_ENV
-        echo "::set-output name=status::success"
+    # echo "::set-output name=status::success"
         
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
