@@ -62,11 +62,11 @@ jobs:
         echo "BUILD=$( awk -F - '{print $1}' <<< $RELEASE )" >> $GITHUB_ENV
     # echo "::set-output name=status::success"
         
-    - name: Delete workflow runs
-      uses: GitRML/delete-workflow-runs@main
-      with:
-        retain_days: 1
-        keep_minimum_runs: 6
+ #     - name: Delete workflow runs
+ #       uses: GitRML/delete-workflow-runs@main
+ #       with:
+ #         retain_days: 1
+ #         keep_minimum_runs: 6
 
     # - name: Remove old Releases and tags
     #   uses: dev-drprasad/delete-older-releases@v0.2.0
